@@ -1,5 +1,6 @@
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,21 +25,23 @@ export function Prompt() {
     <div className="flex items-center justify-center">
       <form
         onSubmit={handleSubmit(handlePrompt)}
-        className="flex flex-col items-center space-y-5"
+        className="flex flex-col space-y-5 items-center"
       >
         <Textarea
-          className="border-2 border-gray-300 rounded-sm p-2 resize-y w-full md:w-96 text-white max-h-80 min-h-40"
+          className="rounded-sm p-2 shadow-2xl shadow-gray-900 w-full sm:w-[600px] text-white max-h-80 min-h-40 border-none resize-none"
           autoComplete="off"
           required
-          placeholder="O que deseja falar?"
+          placeholder="Type your prompt here..."
+          style={{ outline: "none" }}
           {...register("prompt")}
         />
+
         <Button
-          className="text-lg font-medium p-6"
+          className="text-lg font-medium p-6 w-full sm:w-[55%]"
           type="submit"
           variant="secondary"
         >
-          Gerar Áudio
+          Generate Audio
         </Button>
       </form>
     </div>
