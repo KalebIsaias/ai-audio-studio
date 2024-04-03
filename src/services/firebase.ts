@@ -2,13 +2,13 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDrKUo2ixhP9CL3CrtM7p4NUsLEjCVPL84",
-  authDomain: "ai-audio-studio.firebaseapp.com",
-  projectId: "ai-audio-studio",
-  storageBucket: "ai-audio-studio.appspot.com",
-  messagingSenderId: "247261957386",
-  appId: "1:247261957386:web:e58d316350ab6e7a303ef3",
-  measurementId: "G-4RKFFPNTDS",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 const app = initializeApp(firebaseConfig);
