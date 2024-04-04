@@ -55,7 +55,7 @@ export function Prompt() {
         </Button>
       </form>
 
-      {audio && <audio className="" controls src={audio} />}
+      {audio && <audio className="auio" controls src={audio} />}
     </div>
   );
 }
