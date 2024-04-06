@@ -2,29 +2,36 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 
-import { tts } from "@/services/tts";
+import { UserAuth } from "@/contexts/Auth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { AudioService } from "@/services/storage";
 
-const promptSchema = z.object({
-  prompt: z.string(),
-});
+interface PromptProps {
+  value?: string;
+  onSubmit: (data: { prompt: string }) => Promise<void>;
+  buttonText: string;
+  onDelete?: () => Promise<void>;
+}
 
-type PromptSchema = z.infer<typeof promptSchema>;
-
-export function Prompt() {
+export function Prompt({ value, buttonText }: PromptProps) {
   const [audio, setAudio] = useState<string | null>(null);
+  const { user } = UserAuth();
+  const service = new AudioService();
 
-  const { register, handleSubmit } = useForm<PromptSchema>({
-    resolver: zodResolver(promptSchema),
+  const { register, handleSubmit } = useForm<{ prompt: string }>({
+    resolver: zodResolver(
+      z.object({
+        prompt: z.string(),
+      })
+    ),
   });
 
-  async function handlePrompt(data: PromptSchema) {
+  async function handlePrompt(data: { prompt: string }) {
     try {
-      const response = await tts(data.prompt);
-      const audioData = `data:audio/wav;base64,${response.audioContent}`;
-      setAudio(audioData);
+      const response = await service.saveAudioToStorageAndDB(data.prompt, user);
+      setAudio(response);
     } catch (error) {
       console.error("Error generating audio:", error);
       alert("Error generating audio. Please try again.");
@@ -43,6 +50,7 @@ export function Prompt() {
           required
           placeholder="Type your prompt here..."
           style={{ outline: "none" }}
+          defaultValue={value} // Defina o valor padrão com base na prop value
           {...register("prompt")}
         />
 
@@ -51,11 +59,12 @@ export function Prompt() {
           type="submit"
           variant="secondary"
         >
-          Generate Audio
+          {buttonText} {/* Use o buttonText fornecido como label do botão */}
         </Button>
       </form>
-
-      {audio && <audio className="auio" controls src={audio} />}
+      <div className="bottom-3">
+        {audio && <audio className="" controls src={audio} />}
+      </div>
     </div>
   );
 }

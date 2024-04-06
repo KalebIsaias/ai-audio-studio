@@ -1,29 +1,29 @@
+// tts.ts
 import axios from "axios";
 
 export async function tts(text: string) {
-  const apiKey = import.meta.env.VITE_GOOGLE_TEXT_TO_SPEECH_API_KEY;
-  const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
-  const payload = {
-    audioConfig: {
-      audioEncoding: "LINEAR16",
-      effectsProfileId: ["headphone-class-device"],
-      pitch: 0,
-      speakingRate: 1,
-    },
-    input: {
-      text: text,
-    },
-    voice: {
-      languageCode: "pt-BR",
-      name: "pt-BR-Neural2-C",
-    },
-  };
-
   try {
-    const response = await axios.post(url, payload);
+    const apiKey = import.meta.env.VITE_GOOGLE_TEXT_TO_SPEECH_API_KEY;
+    const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
+    const payload = {
+      input: {
+        text: text,
+      },
+      voice: {
+        languageCode: "pt-BR",
+        name: "pt-BR-Neural2-C",
+      },
+      audioConfig: {
+        audioEncoding: "LINEAR16",
+        pitch: 0,
+        speakingRate: 1,
+      },
+    };
 
-    return response.data;
+    const response = await axios.post(url, payload);
+    return response.data.audioContent;
   } catch (error) {
     console.error("Erro ao gerar áudio:", error);
+    throw error;
   }
 }

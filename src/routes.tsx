@@ -3,10 +3,10 @@ import { AuthContextProvider } from "./contexts/Auth";
 import { Page } from "./pages/Page";
 import { ProtectedRoute } from "./pages/ProtectedRoute";
 
-import { Studio } from "./pages/Studio";
 import { Login } from "./pages/auth/Login";
 import { Register } from "./pages/auth/Register";
 import { Reset } from "./pages/auth/Reset";
+import { Home } from "./pages/Home";
 
 export function App() {
   return (
@@ -41,7 +41,7 @@ export function App() {
             path="/"
             element={
               <ProtectedRoute>
-                <Studio />
+                <Home />
               </ProtectedRoute>
             }
           />
