@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
 import { UserAuth } from "@/contexts/Auth";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
+import { useEffect } from "react";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email" }),
@@ -26,17 +26,22 @@ export function Login() {
   });
 
   const navigate = useNavigate();
-  const { login } = UserAuth();
+  const { login, user } = UserAuth();
 
   async function handleLogin(data: LoginSchema) {
     try {
-      await login(data.email, data.password).then(() => {
-        navigate("/");
-      });
+      await login(data.email, data.password);
     } catch (error) {
       console.error("Erro ao fazer login:", error);
     }
   }
+
+  // Verifica se o usuário está autenticado e redireciona para a página principal
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   function handleForgotPassword() {
     navigate("/forgot-password");

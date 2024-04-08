@@ -41,6 +41,7 @@ export const AuthContextProvider = ({
       setUser(userCredential.user);
     } catch (error) {
       console.error("Erro ao fazer login:", error);
+      throw new Error("Email ou senha inválidos. Por favor, tente novamente.");
     }
   };
 
@@ -56,7 +57,18 @@ export const AuthContextProvider = ({
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+      } else {
+        localStorage.removeItem("user");
+      }
     });
+
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+
     return () => {
       unsubscribe();
     };
