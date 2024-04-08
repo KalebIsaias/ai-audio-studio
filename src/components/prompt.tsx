@@ -1,22 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 
 import { UserAuth } from "@/contexts/Auth";
+import { AudioService } from "@/services/storage";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AudioService } from "@/services/storage";
 
 interface PromptProps {
   value?: string;
   onSubmit: (data: { prompt: string }) => Promise<void>;
   buttonText: string;
   onDelete?: () => Promise<void>;
+  audioURL?: string | null; // Adiciona audioURL como uma prop
 }
 
-export function Prompt({ value, buttonText }: PromptProps) {
-  const [audio, setAudio] = useState<string | null>(null);
+export function Prompt({
+  value,
+  buttonText,
+  onSubmit,
+  onDelete,
+  audioURL,
+}: PromptProps) {
   const { user } = UserAuth();
   const service = new AudioService();
 
@@ -30,8 +36,7 @@ export function Prompt({ value, buttonText }: PromptProps) {
 
   async function handlePrompt(data: { prompt: string }) {
     try {
-      const response = await service.saveAudioToStorageAndDB(data.prompt, user);
-      setAudio(response);
+      await onSubmit(data); // Chama a função onSubmit com os dados do prompt
     } catch (error) {
       console.error("Error generating audio:", error);
       alert("Error generating audio. Please try again.");
@@ -39,7 +44,7 @@ export function Prompt({ value, buttonText }: PromptProps) {
   }
 
   return (
-    <div className="flex items-center justify-center flex-col space-y-6">
+    <div className="flex items-center justify-center flex-col space-y-6 ">
       <form
         onSubmit={handleSubmit(handlePrompt)}
         className="flex flex-col space-y-5 items-center"
@@ -50,7 +55,7 @@ export function Prompt({ value, buttonText }: PromptProps) {
           required
           placeholder="Type your prompt here..."
           style={{ outline: "none" }}
-          defaultValue={value} // Defina o valor padrão com base na prop value
+          defaultValue={value}
           {...register("prompt")}
         />
 
@@ -59,11 +64,11 @@ export function Prompt({ value, buttonText }: PromptProps) {
           type="submit"
           variant="secondary"
         >
-          {buttonText} {/* Use o buttonText fornecido como label do botão */}
+          {buttonText}
         </Button>
       </form>
       <div className="bottom-3">
-        {audio && <audio className="" controls src={audio} />}
+        {audioURL && <audio className="" controls src={audioURL} />}
       </div>
     </div>
   );

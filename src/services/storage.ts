@@ -5,15 +5,18 @@ import {
   uploadString,
   getDownloadURL,
   deleteObject,
+  getMetadata,
 } from "firebase/storage";
 import {
-  getDatabase,
   ref as dbRef,
-  push,
-  set,
-  remove,
   get,
   DataSnapshot,
+  getDatabase,
+  set,
+  push,
+  DatabaseReference,
+  remove,
+  update,
 } from "firebase/database";
 import { User } from "firebase/auth";
 import { tts } from "./tts";
@@ -41,106 +44,157 @@ export class AudioService {
     }
   }
 
+  async getAudioURLFromStorage(audioURL: string) {
+    try {
+      // Criar uma referência para o arquivo de áudio no armazenamento
+      const storage = getStorage();
+      const audioRef = storageRef(storage, audioURL);
+
+      // Obter o URL de download do arquivo de áudio
+      const url = await getDownloadURL(audioRef);
+      return url;
+    } catch (error) {
+      console.error("Error getting audio URL from storage:", error);
+      throw new Error(
+        "Error getting audio URL from storage. Please try again."
+      );
+    }
+  }
+
   async saveAudioToStorageAndDB(prompt: string, user: User | null) {
     try {
       console.log("Gerando áudio para o prompt:", prompt);
 
       // Gerar áudio
       const audioData = await tts(prompt);
+      const fileName = `${Date.now()}.wav`;
 
       // Salvar áudio no Storage
       const storage = getStorage(app);
-      const audioRef = storageRef(
-        storage,
-        `audios/${user?.uid}/${Date.now()}.wav`
-      );
+      const audioRef = storageRef(storage, `audios/${user?.uid}/${fileName}`);
       await uploadString(audioRef, audioData, "base64", {
         contentType: "audio/wav",
       });
 
-      // Obter URL do áudio
-      const audioURL = await getDownloadURL(audioRef);
-
-      // Salvar dados no Realtime Database
       const db = getDatabase(app);
       const userAudioRef = push(dbRef(db, `userAudios/${user?.uid}`));
       await set(userAudioRef, {
         prompt: prompt,
-        audioURL: audioURL,
+        fileName: fileName,
         user: user?.uid,
         createdAt: Date.now(),
-        updatedAt: Date.now(), // Corrigi um typo aqui
+        updatedAt: Date.now(),
       });
 
-      return audioURL;
+      return fileName;
     } catch (error) {
       console.error("Erro ao salvar áudio e dados:", error);
       throw error;
     }
   }
+
   async updateAudioInStorageAndDB(
     prompt: string,
     user: User | null,
-    audioKey: string
+    audioKey: string,
+    newAudioData: string
   ) {
     try {
-      console.log("Atualizando áudio para o prompt:", prompt);
+      console.log("Updating audio with prompt:", prompt);
+      console.log("Selected audio:", audioKey);
 
-      // Remover áudio anterior do Storage
-      const storage = getStorage(app);
-      const audioRef = storageRef(
+      // Referência ao armazenamento
+      const storage = getStorage();
+
+      // Referência ao arquivo de áudio antigo
+      const oldAudioRef = storageRef(
         storage,
-        `audios/${user?.uid}/${audioKey}.wav`
+        `audios/${user?.uid}/${audioKey}`
       );
-      await deleteObject(audioRef);
 
-      // Gerar novo áudio com base no prompt atualizado
-      const newAudioData = await tts(prompt);
+      // Obter nome do arquivo sem a extensão
+      const fileNameWithoutExt = audioKey.split(".")[0];
 
-      // Salvar novo áudio no Storage
-      await uploadString(audioRef, newAudioData, "base64", {
+      // Nome do arquivo com a extensão corrigida
+      const fileName = `${fileNameWithoutExt}.wav`;
+
+      // Referência ao novo arquivo de áudio
+      const newAudioRef = storageRef(
+        storage,
+        `audios/${user?.uid}/${fileName}`
+      );
+
+      // Carregar o novo áudio para o armazenamento
+      await uploadString(newAudioRef, newAudioData, "base64", {
         contentType: "audio/wav",
       });
 
       // Obter URL do novo áudio
-      const newAudioURL = await getDownloadURL(audioRef);
+      const newAudioURL = await getDownloadURL(newAudioRef);
 
-      // Atualizar URL do áudio no Realtime Database
-      const db = getDatabase(app);
-      const userAudioRef = dbRef(db, `userAudios/${user?.uid}/${audioKey}`);
-      await set(userAudioRef, {
+      // Referência ao nó de áudio no banco de dados
+      const db = getDatabase();
+      const audioRef = dbRef(db, `userAudios/${user?.uid}/${audioKey}`);
+
+      // Atualizar os dados do áudio no banco de dados
+      await update(audioRef, {
         prompt: prompt,
+        fileName: fileName,
         audioURL: newAudioURL,
-        user: user?.uid,
-        updatedAt: Date.now(),
+        updatedAt: { ".sv": "timestamp" },
       });
 
-      return newAudioURL;
+      console.log("Audio updated successfully");
     } catch (error) {
-      console.error("Erro ao atualizar áudio:", error);
+      console.error("Error updating audio:", error);
       throw error;
     }
   }
 
-  async deleteAudio(user: User | null, audioId: string) {
+  async deleteAudio(user: User | null, fileName: string) {
     try {
-      // Exclui o áudio do armazenamento
+      // Referência para o arquivo no Storage
       const storage = getStorage();
       const audioRef = storageRef(
         storage,
-        `audios/${user?.uid}/${audioId}.wav`
+        `audios/${user?.uid}/${fileName}` // Caminho do arquivo no Storage
       );
+
+      // Verificar se o arquivo existe antes de tentar excluí-lo
+      const metadata = await getMetadata(audioRef);
+      if (!metadata) {
+        console.log("Audio not found. It may have already been deleted.");
+        return;
+      }
+
+      // Excluir o arquivo do armazenamento
       await deleteObject(audioRef);
 
-      // Exclui o áudio do banco de dados
+      // Referência para o nó dos áudios do usuário no Realtime Database
       const db = getDatabase();
-      const userAudioRef = dbRef(db, `userAudios/${user?.uid}/${audioId}`);
-      await remove(userAudioRef);
+      const userAudiosRef: DatabaseReference = dbRef(
+        db,
+        `userAudios/${user?.uid}`
+      );
+
+      // Obter o snapshot do nó dos áudios do usuário
+      const snapshot: DataSnapshot = await get(userAudiosRef);
+
+      // Verificar se o snapshot existe
+      if (snapshot.exists()) {
+        // Iterar sobre os nós dos áudios do usuário
+        snapshot.forEach((childSnapshot: DataSnapshot) => {
+          // Verificar se o nome do arquivo corresponde ao áudio atual
+          if (childSnapshot.child("fileName").val() === fileName) {
+            // Remover o nó do áudio
+            remove(childSnapshot.ref);
+          }
+        });
+      }
 
       console.log("Audio deleted successfully");
     } catch (error) {
       console.error("Error deleting audio:", error);
-      throw new Error("Error deleting audio. Please try again.");
     }
   }
 }
