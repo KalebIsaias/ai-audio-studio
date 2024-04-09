@@ -1,4 +1,3 @@
-// tts.ts
 import axios from "axios";
 
 export async function tts(text: string) {

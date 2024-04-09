@@ -19,7 +19,6 @@ import {
 } from "firebase/database";
 import { User } from "firebase/auth";
 import { tts } from "./tts";
-import { auth } from "./firebase";
 
 export class AudioService {
   async listUserAudios(user: User | null) {
@@ -67,7 +66,7 @@ export class AudioService {
   async saveAudioToStorageAndDB(prompt: string, user: User | null) {
     try {
       console.log("Gerando áudio para o prompt:", prompt);
-      const audioData = await tts(prompt);
+      const audioData = await tts(prompt); // Assumindo que a função tts retorna uma string em base64
       const fileName = `${Date.now()}.wav`;
       const storage = getStorage();
       const audioRef = storageRef(storage, `audios/${user?.uid}/${fileName}`);
@@ -100,10 +99,7 @@ export class AudioService {
       console.log("Updating audio with prompt:", prompt);
       console.log("Selected audio:", audioKey);
       const storage = getStorage();
-      const oldAudioRef = storageRef(
-        storage,
-        `audios/${user?.uid}/${audioKey}`
-      );
+      storageRef(storage, `audios/${user?.uid}/${audioKey}`);
       const fileNameWithoutExt = audioKey.split(".")[0];
       const fileName = `${fileNameWithoutExt}.wav`;
       const newAudioRef = storageRef(
