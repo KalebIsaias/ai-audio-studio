@@ -1,9 +1,5 @@
-import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
-
-import { UserAuth } from "@/contexts/Auth";
-import { AudioService } from "@/services/storage";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,16 +12,7 @@ interface PromptProps {
   audioURL?: string | null; // Adiciona audioURL como uma prop
 }
 
-export function Prompt({
-  value,
-  buttonText,
-  onSubmit,
-  onDelete,
-  audioURL,
-}: PromptProps) {
-  const { user } = UserAuth();
-  const service = new AudioService();
-
+export function Prompt({ value, buttonText, onSubmit, audioURL }: PromptProps) {
   const { register, handleSubmit } = useForm<{ prompt: string }>({
     resolver: zodResolver(
       z.object({
