@@ -66,7 +66,7 @@ export class AudioService {
   async saveAudioToStorageAndDB(prompt: string, user: User | null) {
     try {
       console.log("Gerando áudio para o prompt:", prompt);
-      const audioData = await tts(prompt); // Assumindo que a função tts retorna uma string em base64
+      const audioData = await tts(prompt);
       const fileName = `${Date.now()}.wav`;
       const storage = getStorage();
       const audioRef = storageRef(storage, `audios/${user?.uid}/${fileName}`);

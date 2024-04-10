@@ -29,21 +29,17 @@ export function Home() {
       console.log("Selected audio:", selectedAudio);
       console.log("Selected audio:", selectedAudio!.id);
 
-      // Gerar novo áudio com base no prompt atualizado
       const newAudioData = await tts(data.prompt);
 
-      // Substituir caracteres inválidos no nome do arquivo por "_"
       const fileName = selectedAudio!.fileName.replace(/[.#$[\]]/g, "_");
 
-      // Atualizar áudio no Storage e no banco de dados
       await service.updateAudioInStorageAndDB(
         data.prompt,
         user,
         fileName,
-        newAudioData // Passando o novo áudio gerado como parâmetro
+        newAudioData
       );
 
-      // Atualizar prompt do áudio selecionado
       setSelectedAudio({ ...selectedAudio!, prompt: data.prompt });
     } catch (error) {
       console.error("Error updating audio:", error);
@@ -105,15 +101,13 @@ export function Home() {
         </Button>
       </div>
       <div className="flex flex-col max-h-screen overflow-y-scroll col-span-2">
-        {/* Adicione onPlayAudio como uma propriedade */}
         <List
           onSelectAudio={onSelectAudio}
           onDeleteAudio={handleDeleteAudio}
           user={user}
-          onPlayAudio={() => {}} // Adicione uma função vazia se não for necessária
+          onPlayAudio={() => {}}
         />
       </div>
-      {/* Remova a tag <audio> de fora do componente List */}
     </main>
   );
 }

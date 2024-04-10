@@ -9,7 +9,7 @@ interface PromptProps {
   onSubmit: (data: { prompt: string }) => Promise<void>;
   buttonText: string;
   onDelete?: () => Promise<void>;
-  audioURL?: string | null; // Adiciona audioURL como uma prop
+  audioURL?: string | null;
 }
 
 export function Prompt({ value, buttonText, onSubmit, audioURL }: PromptProps) {
@@ -23,7 +23,7 @@ export function Prompt({ value, buttonText, onSubmit, audioURL }: PromptProps) {
 
   async function handlePrompt(data: { prompt: string }) {
     try {
-      await onSubmit(data); // Chama a função onSubmit com os dados do prompt
+      await onSubmit(data);
     } catch (error) {
       console.error("Error generating audio:", error);
       alert("Error generating audio. Please try again.");

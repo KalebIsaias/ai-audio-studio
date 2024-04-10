@@ -41,7 +41,7 @@ export function List({
   const handleSelectAudio = (audio: AudioType) => {
     onSelectAudio(audio);
     if (onPlayAudio) {
-      onPlayAudio(audio); // Chama a função onPlayAudio com o áudio selecionado
+      onPlayAudio(audio);
     }
   };
 
@@ -51,7 +51,7 @@ export function List({
         <div key={audio.id} className="flex items-center justify-between m-5">
           <div
             className="text-lg text-white hover:cursor-pointer"
-            onClick={() => handleSelectAudio(audio)} // Chama handleSelectAudio em vez de onSelectAudio
+            onClick={() => handleSelectAudio(audio)}
           >
             {audio.prompt}
           </div>
